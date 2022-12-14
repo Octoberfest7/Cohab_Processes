@@ -32,7 +32,9 @@ I have included 'knownprocesses.txt' as an example so that users can observe the
 ## TrustedSec Tasklist BOF
 A small modification is required to TrustedSec's tasklist BOF in order to make it compatible with this script. I had to effectively add a "end of BOF" tag to the output in order for the Aggressor script to identify that the BOF was done sending output and to stop trying to read/color code things.
 
-I recommend grabbing the full package from their repo and then modifying the tasklist BOF (CS-Situational-Awareness-BOF/src/SA/tasklist/entry.c) to match the one I have included here.  Make sure you run make in order to recompile the BOF after you have edited entry.c.
+![image](https://user-images.githubusercontent.com/91164728/207489753-a7340b5c-da64-4c2f-8ea3-d68048ae08da.png)
+
+I recommend grabbing the full package from their repo and then modifying the tasklist BOF (CS-Situational-Awareness-BOF/src/SA/tasklist/entry.c) to match the one I have included here.  This is necessary because the full repo contains some helper/header files that you will need to recompile entry.c.
 
 
 ## Credit
