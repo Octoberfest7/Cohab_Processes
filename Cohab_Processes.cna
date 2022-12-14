@@ -1,0 +1,107 @@
+#Initialize variables
+global('$ProcFile @MasterList @Systemprocs $CaptureProcs');
+$ProcFile = "/root/gitlab/Cohab_Processes/knownprocesses.txt";
+@MasterList = @(); #array to hold processes that are read in from file
+@Excludes = @("System Idle Process", "System", "Registry", "Memory Compression", "received output:", "Image Name", "Name"); #Normal system processes we want to exclude + CS headers
+$CaptureProcs = 0;
+
+
+#Read in processes from file to array
+$handle = openf($ProcFile);
+
+while $text (readln($handle)) 
+{
+    add(@MasterList, $text, -1);
+    #println("Read: $text");
+}
+closef($handle);
+#println(@MasterList); #DEBUG- print process list read to Script Console
+
+
+#This function to evaluate TrustedSec's tasklist BOF output as well as shell tasklist output
+#Have to hook ALL beacon output and then decide whether to parse or not.
+set BEACON_OUTPUT {
+	local('$output $line $proc @beacon_lines')
+
+    #Evaluate each beacon output to see if it meets one of the conditions specified below.
+    #1st condition is TrustedSec's tasklist BOF
+    #2nd condition $CaptureProcs is true; happens when TrustedSec's BOF calls back in, necessary since output comes in several chunks
+    #3rd condition is 'shell tasklist'.
+    if(("ParentProcessId" isin $2 && "CommandLine" isin $2) || $CaptureProcs == 1 || ("Image Name" isin $2 && "Mem Usage" isin $2))
+    {
+        #If TrustedSec BOF, $CaptureProcs = 1 so we continue to parse beacon output until the end of output
+        if("ParentProcessId" isin $2 && "CommandLine" isin $2){
+            $CaptureProcs = 1;
+        }
+
+
+        # Process each line of beacon output, split on double space in order to isolate process name
+        foreach $line (split("\n", ["$2" trim])) {
+            $proc = split("  ", $line)[0];
+
+            #println($proc)
+            # Highlight unknown process values RED
+            if($proc !in @Excludes && $proc !in @MasterList){
+                $line = "\c4$line\c4";
+            }
+
+            #Look for added "# End Tasklist #" in TrustedSec's tasklist BOF which marks the end of output
+            if("# End Tasklist #" isin $line){
+                println("hit end tasklist!\n");
+                $CaptureProcs = 0;
+            }
+
+            #Otherwise, add each line to output array
+            else{
+                push(@beacon_lines, $line);
+            }
+        }
+        foreach $line (@beacon_lines) {
+            $output .= "$line\n";
+        }
+        return $output;
+    }
+    #Otherwise return normal output without changes
+    else 
+    {
+        return $2;
+    }
+}
+
+#Hook 'ps' command and format
+set BEACON_OUTPUT_PS {
+    local('$output $line $proc @beacon_lines $bpid $pidinfo $bpid')
+    $bpid = binfo($1, "pid");
+
+    $output .= "\cC[*]\o Process List\n";
+    $output .= "\nThis Beacon PID:    \c8YELLOW " . $bpid . "\o\n";
+    $output .= "PID   PPID  Name                                Arch  Session     User\n";
+    $output .= "\cE---   ----  ----                                ----  -------     ----\n";
+
+    foreach $line (split("\n", ["$2" trim])) {
+        ($proc, $ppid, $pid, $arch, $user, $session) = split("\t", $line);
+
+        #Highlight Beacon PID YELLOW
+        if($pid == $bpid){
+            push(@beacon_lines, %(pid => $pid, entry => "\c8$[5]pid $[5]ppid $[35]proc $[5]arch $[11]session $user \o"));
+        }
+        #Highlight non-standard/exempt processes RED
+        else if($proc !in @Excludes && $proc !in @MasterList){
+            push(@beacon_lines, %(pid => $pid, entry => "\c4$[5]pid $[5]ppid $[35]proc $[5]arch $[11]session $user \o"));
+        }
+        #All processes that are on the "standard" list or exempt are displayed normally in WHITE
+        else
+        {
+            push(@beacon_lines, %(pid => $pid, entry => "$[5]pid $[5]ppid $[35]proc $[5]arch $[11]session $user \o"));
+            
+        }
+    }
+
+    #Sort by PID in ascending order
+    sort({ return $1['pid'] <=> $2['pid']; }, @beacon_lines);
+
+    foreach $line (@beacon_lines) {
+        $output .= $line['entry'] . "\n";
+    }
+    return $output;
+}
