@@ -36,6 +36,13 @@ A small modification is required to TrustedSec's tasklist BOF in order to make i
 
 I recommend grabbing the full package from their repo and then modifying the tasklist BOF (CS-Situational-Awareness-BOF/src/SA/tasklist/entry.c) to match the one I have included here.  This is necessary because the full repo contains some helper/header files that you will need to recompile entry.c.
 
+## Limitations
+This methodology for identifying potential cohabitation IS severely limited.  It will not for example identify or catch things like:
+
+1. Process injection- where malware has been injected into and is running in a legitimate, "known" process.
+2. DLL sideloading or hijacking- where malware has been loaded by a legitimate, "known" process by residing in a DLL that the process loads/runs.
+
+This script serves as a way to help catch the "low hanging fruit".
 
 ## Credit
 
