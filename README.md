@@ -15,7 +15,8 @@ Any processes returned as output from the above commands that are NOT found on t
 
 **ps:**
 
-![image](https://user-images.githubusercontent.com/91164728/207488101-4aaf1c30-5737-4dcf-b0d0-f6331639847b.png)
+![image](https://user-images.githubusercontent.com/91164728/208021688-2be93bd7-4b7f-484b-a600-edcbcf166dc1.png)
+
 
 **TrustedSec tasklist BOF:**
 
