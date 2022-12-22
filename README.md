@@ -47,5 +47,5 @@ This script serves as a way to help catch the "low hanging fruit".
 
 ## Credit
 
-Thanks to TrustedSec for their great BOF repo
+Thanks to TrustedSec for their great BOF repo  
 Inspiration and some code snippets taken from harleyQu1nn's [ProcessColor.cna](https://github.com/harleyQu1nn/AggressorScripts/blob/master/ProcessColor.cna)
